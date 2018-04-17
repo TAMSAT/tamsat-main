@@ -1,0 +1,61 @@
+version: "3"
+services:
+  data-subset-build:
+    build: ./data-subset/backend-build
+    volumes:
+      - war-output:/mnt/build-out
+
+  data-subset:
+    restart: always
+    build: ./data-subset/backend
+    expose:
+      - "8080"
+    networks:
+      - subset-proxy
+    depends_on:
+      - data-subset-build
+    volumes:
+      - war-output:/usr/local/tomcat/webapps
+      - tomcat-config-volume:/usr/local/tomcat/conf
+      - tamsat-config-volume:/usr/local/tamsat-subset
+      - /mnt/honeycomb/Data/tamsat/:/usr/local/tamsat-data
+
+  tamsat-www:
+    restart: always
+    build: ./tamsat_www
+    expose:
+      - "80"
+    networks:
+      - www-proxy
+
+  main:
+    restart: always
+    build: ./routing
+    expose:
+      - "80"
+    ports:
+      - "80:80"
+    networks:
+      - default
+      - subset-proxy
+      - www-proxy
+    depends_on:
+      - data-subset
+      - tamsat-www
+    volumes:
+      - /mnt/honeycomb/Data/tamsat/:/usr/local/tamsat-data
+
+volumes:
+  war-output:
+    driver: local
+  tomcat-config-volume:
+    driver: local
+  tamsat-config-volume:
+    driver: local
+
+networks:
+  default:
+  subset-proxy:
+    driver: bridge
+  www-proxy:
+    driver: bridge
