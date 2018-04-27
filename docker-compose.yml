@@ -27,6 +27,8 @@ services:
       - mysql-net
     expose:
       - "3306"
+    volumes:
+      - mysql-db:/var/lib/mysql-data
 
   tamsat-www:
     restart: always
@@ -62,6 +64,8 @@ volumes:
   tomcat-config-volume:
     driver: local
   tamsat-config-volume:
+    driver: local
+  mysql-db:
     driver: local
 
 networks:
