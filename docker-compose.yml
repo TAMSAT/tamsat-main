@@ -20,13 +20,24 @@ services:
       - tamsat-config-volume:/usr/local/tamsat-subset
       - /mnt/honeycomb/Data/tamsat/:/usr/local/tamsat-data
 
+  mysql:
+    restart: always
+    build: ./tamsat_www/mysql
+    networks:
+      - mysql-net
+    expose:
+      - "3306"
+
   tamsat-www:
     restart: always
-    build: ./tamsat_www
+    build: ./tamsat_www/drupal
     expose:
       - "80"
     networks:
       - www-proxy
+      - mysql-net
+    depends_on:
+      - mysql
 
   main:
     restart: always
@@ -55,6 +66,8 @@ volumes:
 
 networks:
   default:
+  mysql-net:
+    driver: bridge
   subset-proxy:
     driver: bridge
   www-proxy:
