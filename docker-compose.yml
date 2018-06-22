@@ -18,7 +18,7 @@ services:
       - war-output:/usr/local/tomcat/webapps
       - tomcat-config-volume:/usr/local/tomcat/conf
       - tamsat-config-volume:/usr/local/tamsat-subset
-      - /mnt/honeycomb/Data/tamsat/:/usr/local/tamsat-data
+      - /tamsat/:/usr/local/tamsat-data
 
   mysql:
     restart: always
@@ -56,7 +56,7 @@ services:
       - data-subset
       - tamsat-www
     volumes:
-      - /mnt/honeycomb/Data/tamsat/:/usr/local/tamsat-data
+      - /tamsat/:/usr/local/tamsat-data
 
 volumes:
   war-output:
