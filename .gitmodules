@@ -3,7 +3,7 @@
 	url = git@github.com:TAMSAT/tamsat-data-subset.git
 [submodule "tamsat_www"]
 	path = tamsat_www
-	url = git@github.com:guygriffiths/tamsat_www.git
+	url = git@github.com:TAMSAT/tamsat_www.git
 [submodule "alert"]
 	path = alert
 	url = git@github.com:TAMSAT/tamsat-alert-webapp.git
