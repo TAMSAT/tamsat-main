@@ -1,78 +1,132 @@
-version: "3"
+version: '3'
 services:
-  data-subset-build:
-    build: ./data-subset/backend-build
-    volumes:
-      - war-output:/mnt/build-out
+    tamsat-alert-frontend-build:
+        build: ./alert/frontend-build
+        volumes:
+            - static-web:/mnt/www-out
+    redis:
+        image: 'redis:3.2'
+        command: redis-server
+        networks:
+            - alert-subnet
+        volumes:
+          - 'redis:/data'
+        ports:
+          - '6379:6379'
+    tamsat-alert:
+        build:
+            context: ./alert/
+        networks:
+            - alert-subnet
+        depends_on:
+            - tamsat-alert-frontend-build
+        expose:
+            - '80'
+        volumes:
+            - /usr/local/tamsat-data:/usr/local/tamsat-data
+            - static-web:/app/static
+    celeryworker:
+        build:
+            context: ./alert/
+            dockerfile: Dockerfile.celeryworker
+        networks:
+            - alert-subnet
+        depends_on:
+            - redis
+        stop_grace_period: 2h
+        volumes:
+            - /usr/local/tamsat-data:/usr/local/tamsat-data
 
-  data-subset:
-    restart: always
-    build: ./data-subset/backend
-    expose:
-      - "8080"
-    networks:
-      - subset-proxy
-    depends_on:
-      - data-subset-build
-    volumes:
-      - war-output:/usr/local/tomcat/webapps
-      - tomcat-config-volume:/usr/local/tomcat/conf
-      - tamsat-config-volume:/usr/local/tamsat-subset
-      - /tamsat/:/usr/local/tamsat-data
+    data-subset-build:
+        build: ./data-subset/backend-build
+        volumes:
+            - war-output:/mnt/build-out
 
-  mysql:
-    restart: always
-    build: ./tamsat_www/mysql
-    networks:
-      - mysql-net
-    expose:
-      - "3306"
-    volumes:
-      - mysql-db:/var/lib/mysql-data
+    data-subset:
+        restart: always
+        build: ./data-subset/backend
+        expose:
+            - '8080'
+        networks:
+            - subset-proxy
+        depends_on:
+            - data-subset-build
+        stop_grace_period: 1m
+        volumes:
+            - war-output:/usr/local/tomcat/webapps
+            - tomcat-config-volume:/usr/local/tomcat/conf
+            - tamsat-config-volume:/usr/local/tamsat-subset
+            - /tamsat/:/usr/local/tamsat-data
 
-  tamsat-www:
-    restart: always
-    build: ./tamsat_www/drupal
-    expose:
-      - "80"
-    networks:
-      - www-proxy
-      - mysql-net
-    depends_on:
-      - mysql
+    mysql:
+        restart: always
+        build:
+            context: ./tamsat_www/mysql
+            args:
+                - MYSQL_ROOT_PASSWORD
+                - MYSQL_USER
+                - MYSQL_PASSWORD
+        networks:
+            - mysql-net
+        expose:
+            - '3306'
+        volumes:
+            - mysql-db:/var/lib/mysql-data
 
-  main:
-    restart: always
-    build: ./routing
-    expose:
-      - "80"
-    ports:
-      - "80:80"
-    networks:
-      - default
-      - subset-proxy
-      - www-proxy
-    depends_on:
-      - data-subset
-      - tamsat-www
-    volumes:
-      - /tamsat/:/usr/local/tamsat-data
+    tamsat-www:
+        restart: always
+        build:
+            context: ./tamsat_www/drupal
+            args:
+                - MYSQL_USER
+                - MYSQL_PASSWORD
+        expose:
+            - '80'
+        networks:
+            - www-proxy
+            - mysql-net
+        depends_on:
+            - mysql
+
+    main:
+        restart: always
+        build: ./routing
+        expose:
+            - '80'
+        ports:
+            - '80:80'
+        networks:
+            - default
+            - subset-proxy
+            - www-proxy
+            - alert-subnet
+        depends_on:
+            - data-subset
+            - tamsat-www
+            - tamsat-alert
+        volumes:
+            - /tamsat/:/usr/local/tamsat-data
 
 volumes:
-  war-output:
-    driver: local
-  tomcat-config-volume:
-    driver: local
-  tamsat-config-volume:
-    driver: local
-  mysql-db:
-    driver: local
+    redis:
+    static-web:
+        driver: local
+    war-output:
+        driver: local
+    tomcat-config-volume:
+        driver: local
+    tamsat-config-volume:
+        driver: local
+    mysql-db:
+        driver: local
 
 networks:
-  default:
-  mysql-net:
-    driver: bridge
-  subset-proxy:
-    driver: bridge
-  www-proxy:
-    driver: bridge
+    default:
+    mysql-net:
+        driver: bridge
+    subset-proxy:
+        driver: bridge
+    www-proxy:
+        driver: bridge
+    alert-subnet:
+        driver: bridge
