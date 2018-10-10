@@ -27,12 +27,22 @@ The following is a brief description of how the code is organised, with a high-l
 ### Root (this directory)
 This directory contains this README, and the `docker-compose.yml` file which will bring up all of the services.
 
-Prior to initialising the TAMSAT system, some configuration needs to be done in the following files:
+Prior to initialising the TAMSAT system, some configuration needs to be done.  You should fill in the SMTP (email) server in the following files:
 
 ```
 data-subset/backend/config.xml
 alert/app/tamsat-alert.cfg
 ```
+
+and additionally must create a file named `.env` in the current directory, with the contents:
+
+```
+MYSQL_ROOT_PASSWORD=<root password>
+MYSQL_USER=<user>
+MYSQL_PASSWORD=<user password>
+```
+
+This configures the settings for the MySQL database which holds the content for the main, Drupal-based, TAMSAT website.  They will not generally need to be used for direct access, but must be configured for the site to function correctly.
 
 You can then bring the system up using:
 
