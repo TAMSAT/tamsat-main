@@ -1,7 +1,10 @@
 version: '3'
 services:
     tamsat-alert-frontend-build:
-        build: ./alert/frontend-build
+        build:
+            context: ./alert/frontend-build
+            args:
+                BASE_URL: /alert/
         volumes:
             - static-web:/mnt/www-out
     redis:
