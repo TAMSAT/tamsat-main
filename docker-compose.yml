@@ -8,6 +8,7 @@ services:
         volumes:
             - static-web:/mnt/www-out
     redis:
+        restart: always
         image: 'redis:3.2'
         command: redis-server
         networks:
@@ -17,6 +18,7 @@ services:
         ports:
           - '6379:6379'
     tamsat-alert:
+        restart: always
         build:
             context: ./alert/
         networks:
@@ -29,6 +31,7 @@ services:
             - /usr/local/tamsat-data:/usr/local/tamsat-data
             - static-web:/app/static
     celeryworker:
+        restart: always
         build:
             context: ./alert/
             dockerfile: Dockerfile.celeryworker
