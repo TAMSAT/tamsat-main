@@ -15,8 +15,6 @@ services:
             - alert-subnet
         volumes:
           - 'redis:/data'
-        ports:
-          - '6379:6379'
     tamsat-alert:
         restart: always
         build:
