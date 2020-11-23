@@ -122,7 +122,7 @@ After a SUCCESS message is printed about the keys being successfully installed, 
 (3) change permissions so that the certificates can be read by the tamsat account.  For example:
 
 ```
-sudo chmod -R a+rx data/certbot/conf/live/*
+sudo chmod -R a+rx data
 ```
 
 (4) Restore the change to `docker-compose.yml` in step (1) and remove the `init-letsencrypt.sh` script copied to the root directory in step (2)
