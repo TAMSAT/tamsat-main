@@ -89,6 +89,45 @@ The TAMSAT ALERT web tool is a python (Flask + Celery) based queuing system and 
 
 This tool comprises of three Docker containers - `redis` (direct from Docker hub), a celery worker container (defined in `Dockerfile.celeryworker`), and the main Flask webapp (running on an nginx instance, and defined in `Dockerfile`)
 
+HTTPS Support
+-------------
+
+HTTPS support involves obtaining HTTPS certificates from the https://letsencrypt.org site and then periodically checking that these certificates are not about to expire (and updating them if they are).
+
+To do this we add a certbot container to docker-compose, and use a utility script that needs to be run once when the service is deployed on a new host.
+
+The script `init-letsencrypt.sh` and a general overview is available here: https://github.com/sugenk/nginx-certbot
+
+### HTTPS setup procedure (do this for each new deployment):
+
+(1) temporarily comment out or remove the following line from `docker-compose.yml`:
+
+   `entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"`
+
+(2) run the initialisation script that obtains the first SSL keys.
+
+```
+mkdir -p data/certbot/www
+mkdir -p data/certbot/conf
+cp routing/init-letsencrypt.sh .
+sudo ./init-letsencrypt.sh
+```
+
+When prompted about whether you want to share your e-mail address with the FSF, you can press (N)
+
+This should create a data sub-folder and install the SSL keys under `data/certbot/conf/live/tamsat.org.uk`
+
+After a SUCCESS message is printed about the keys being successfully installed, there is an error reported about not starting nginx, that can safely be ignored.
+
+(3) change permissions so that the certificates can be read by the tamsat account.  For example:
+
+```
+sudo chmod -R a+rx data/certbot/conf/live/*
+```
+
+(4) Restore the change to `docker-compose.yml` in step (1) and remove the `init-letsencrypt.sh` script copied to the root directory in step (2)
+
+You should now be able to bring up the tamsat service as described above.
 
 Author
 ------
